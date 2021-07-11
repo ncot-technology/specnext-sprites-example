@@ -309,16 +309,11 @@ end:
     esxdos_f_close(filehandle);
 }
 
-typedef struct {
-    uint8_t x, y;
-    int8_t vx, vy;
-    uint8_t spriteFlags;
-    uint8_t spritePattern;
-} sprite;
+
 
 int main(void)
 {
-    
+    zx_border(INK_BLUE);
     uint8_t sprBuf[256];
     load_sprite_patterns("all.spr", sprBuf, 37, 0);
     set_sprite_pattern_slot(0);
@@ -328,67 +323,24 @@ int main(void)
 
     // Endless loop
     uint8_t timer = 0;
-    sprite sprites[10];
-
-    for (int i = 0; i < 10; i++) {
-        sprites[i].x = (16 * i+1);
-        sprites[i].y = 32;
-        int8_t x = -1+rand() % 2;
-        int8_t y = -1+rand() % 2;
-        sprites[i].vx = (x != 0) ? x : 1;
-        sprites[i].vy = (y != 0) ? y : 1;
-        sprites[i].spriteFlags = 0;
-        sprites[i].spritePattern = 0;
-    }
-
+    uint8_t spriteID = 2;
     while(1) {
-        zx_border(INK_BLUE);
-        for (int i = 0; i < 10; i++) {
-            if (timer %16 == 0) {
-                sprites[i].spritePattern = ++sprites[i].spritePattern % 2;
-            }
-            uint8_t newx = sprites[i].x + sprites[i].vx;
-            if (sprites[i].vx > 0) {
-                if (newx < sprites[i].x) {
-                    sprites[i].x = 255;
-                    sprites[i].vx = -1;
-                    sprites[i].spriteFlags = MIRROR_X_MASK;
-                } else {
-                    sprites[i].x = newx;
-                }
-            } else if (sprites[i].vx < 0) {
-                if (newx > sprites[i].x) {
-                    sprites[i].x = 0;
-                    sprites[i].vx = 1;
-                    sprites[i].spriteFlags = 0;
-                } else {
-                    sprites[i].x = newx;
-                }
-            }
-            uint8_t newy = sprites[i].y + sprites[i].vy;
-            if (sprites[i].vy > 0) {
-                if (newy > 192) {
-                    sprites[i].y = 192;
-                    sprites[i].vy = -1;
-                } else {
-                    sprites[i].y = newy;
-                }
-            } else if (sprites[i].vy < 0) {
-                if (newy > 192) {
-                    sprites[i].y = 0;
-                    sprites[i].vy = 1;
-                } else {
-                    sprites[i].y = newy;
-                }
-            }
-        }
         set_sprite_attrib_slot(0);
-        for (int i = 0; i < 10; i++) {
-            set_sprite_attributes_ext(sprites[i].spritePattern, sprites[i].x, sprites[i].y, 0, sprites[i].spriteFlags, 0, 1);
+        // Unified sprite
+        set_sprite_attributes_ext_anchor(spriteID, 32, 64, 0, 0, 1, 0);
+        set_sprite_attributes_ext_relative(1, 16, 0, 0, 0, 1, 1);
+        set_sprite_attributes_ext_relative(2, 32, 0, 0, 0, 1, 1);
+        set_sprite_attributes_ext_relative(4, 16, 16, 0, 0, 1, 1);
+        set_sprite_attributes_ext_relative(5, 32, 16, 0, 0, 1, 1);
+
+        if (++timer % 32 == 0) {
+            if (spriteID == 2)
+                spriteID = 8;
+            else
+                spriteID = 2;
         }
 
-        WAIT_FOR_SCANLINE(192);
-        timer++;  
+        WAIT_FOR_SCANLINE(192);       
     }
 
     return 0;

@@ -40,15 +40,6 @@
 /* Rotate the sprite 90 degrees. */
 #define ROTATE_MASK 0x02
 
-#define SCALE_1x_XMASK 0x00
-#define SCALE_2x_XMASK 0x08
-#define SCALE_4x_XMASK 0x10
-#define SCALE_8x_XMASK 0x18
-#define SCALE_1x_YMASK 0x00
-#define SCALE_2x_YMASK 0x02
-#define SCALE_4x_YMASK 0x04
-#define SCALE_8x_YMASK 0x06
-
 #define SPRITE_PATTERN_MASK     0x3F
 #define SPRITE_ATTRIB_MASK      0x7F
 #define X_LSB_MASK           0x00FF
@@ -99,7 +90,6 @@ void set_sprite_attributes_ext(uint8_t sprite_pattern_slot,
                                uint8_t y,
                                uint8_t palette_offset,
                                uint8_t sprite_flags,
-                               uint8_t scale_flags,
                                bool visible)
 {
     uint8_t pattern_slot = sprite_pattern_slot & SPRITE_PATTERN_MASK;
@@ -112,13 +102,7 @@ void set_sprite_attributes_ext(uint8_t sprite_pattern_slot,
     IO_SPRITE_ATTRIBUTE = X_LSB(X_EXT(x));
     IO_SPRITE_ATTRIBUTE = Y_EXT(y);
     IO_SPRITE_ATTRIBUTE = (palette_offset << PALETTE_OFFSET_SHIFT) | X_MSB(X_EXT(x)) | sprite_flags;
-
-    if (scale_flags) {
-        IO_SPRITE_ATTRIBUTE = pattern_slot | SPRITE_ENABLE_ATTRIB_4;
-        IO_SPRITE_ATTRIBUTE = scale_flags;
-    } else {
-        IO_SPRITE_ATTRIBUTE = pattern_slot;
-    }
+    IO_SPRITE_ATTRIBUTE = pattern_slot;
 }
 
 void set_sprite_attributes(uint8_t sprite_pattern_slot,
@@ -139,60 +123,6 @@ void set_sprite_attributes(uint8_t sprite_pattern_slot,
     IO_SPRITE_ATTRIBUTE = y;
     IO_SPRITE_ATTRIBUTE = (palette_offset << PALETTE_OFFSET_SHIFT) | X_MSB(x) | sprite_flags;
     IO_SPRITE_ATTRIBUTE = pattern_slot;
-}
-
-void set_sprite_attributes_ext_anchor(uint8_t sprite_pattern_slot,
-                               uint8_t x,
-                               uint8_t y,
-                               uint8_t palette_offset,
-                               uint8_t sprite_flags,
-                               bool visible,
-                               bool rel_is_unified)
-{
-    uint8_t pattern_slot = sprite_pattern_slot & SPRITE_PATTERN_MASK;
-
-    if (visible)
-    {
-        pattern_slot = pattern_slot | SPRITE_VISIBLE_MASK;
-    }
-
-    IO_SPRITE_ATTRIBUTE = X_LSB(X_EXT(x));
-    IO_SPRITE_ATTRIBUTE = Y_EXT(y);
-    IO_SPRITE_ATTRIBUTE = (palette_offset << PALETTE_OFFSET_SHIFT) | X_MSB(X_EXT(x)) | sprite_flags;
-    IO_SPRITE_ATTRIBUTE = pattern_slot | SPRITE_ENABLE_ATTRIB_4;
-
-    // TODO: Implement magnification
-    if (rel_is_unified)
-        IO_SPRITE_ATTRIBUTE = SPRITE_REL_UNIFIED_MASK;
-    else
-        IO_SPRITE_ATTRIBUTE = 0;
-}
-
-// TODO: Implement magnification for relative composite sprites
-void set_sprite_attributes_ext_relative(uint8_t sprite_pattern_slot,
-                               int8_t x,
-                               int8_t y,
-                               uint8_t palette_offset,
-                               uint8_t sprite_flags,
-                               bool visible,
-                               bool pattern_is_relative_to_anchor)
-{
-    uint8_t pattern_slot = sprite_pattern_slot & SPRITE_PATTERN_MASK;
-
-    if (visible)
-    {
-        pattern_slot = pattern_slot | SPRITE_VISIBLE_MASK;
-    }
-
-    IO_SPRITE_ATTRIBUTE = x;
-    IO_SPRITE_ATTRIBUTE = y;
-    IO_SPRITE_ATTRIBUTE = (palette_offset << PALETTE_OFFSET_SHIFT) | X_MSB(X_EXT(x)) | sprite_flags;
-    IO_SPRITE_ATTRIBUTE = pattern_slot | SPRITE_ENABLE_ATTRIB_4;
-
-    if (pattern_is_relative_to_anchor)
-        IO_SPRITE_ATTRIBUTE = 0x41;
-    else
-        IO_SPRITE_ATTRIBUTE = 0x40;    
 }
 
 void set_sprite_pattern(const void *sprite_pattern)
@@ -309,16 +239,9 @@ end:
     esxdos_f_close(filehandle);
 }
 
-typedef struct {
-    uint8_t x, y;
-    int8_t vx, vy;
-    uint8_t spriteFlags;
-    uint8_t spritePattern;
-} sprite;
-
 int main(void)
 {
-    
+    zx_border(INK_BLUE);
     uint8_t sprBuf[256];
     load_sprite_patterns("all.spr", sprBuf, 37, 0);
     set_sprite_pattern_slot(0);
@@ -327,68 +250,16 @@ int main(void)
     set_sprite_attrib_slot(0);
 
     // Endless loop
-    uint8_t timer = 0;
-    sprite sprites[10];
-
-    for (int i = 0; i < 10; i++) {
-        sprites[i].x = (16 * i+1);
-        sprites[i].y = 32;
-        int8_t x = -1+rand() % 2;
-        int8_t y = -1+rand() % 2;
-        sprites[i].vx = (x != 0) ? x : 1;
-        sprites[i].vy = (y != 0) ? y : 1;
-        sprites[i].spriteFlags = 0;
-        sprites[i].spritePattern = 0;
-    }
-
+    int timer = 0;
     while(1) {
-        zx_border(INK_BLUE);
-        for (int i = 0; i < 10; i++) {
-            if (timer %16 == 0) {
-                sprites[i].spritePattern = ++sprites[i].spritePattern % 2;
-            }
-            uint8_t newx = sprites[i].x + sprites[i].vx;
-            if (sprites[i].vx > 0) {
-                if (newx < sprites[i].x) {
-                    sprites[i].x = 255;
-                    sprites[i].vx = -1;
-                    sprites[i].spriteFlags = MIRROR_X_MASK;
-                } else {
-                    sprites[i].x = newx;
-                }
-            } else if (sprites[i].vx < 0) {
-                if (newx > sprites[i].x) {
-                    sprites[i].x = 0;
-                    sprites[i].vx = 1;
-                    sprites[i].spriteFlags = 0;
-                } else {
-                    sprites[i].x = newx;
-                }
-            }
-            uint8_t newy = sprites[i].y + sprites[i].vy;
-            if (sprites[i].vy > 0) {
-                if (newy > 192) {
-                    sprites[i].y = 192;
-                    sprites[i].vy = -1;
-                } else {
-                    sprites[i].y = newy;
-                }
-            } else if (sprites[i].vy < 0) {
-                if (newy > 192) {
-                    sprites[i].y = 0;
-                    sprites[i].vy = 1;
-                } else {
-                    sprites[i].y = newy;
-                }
-            }
-        }
         set_sprite_attrib_slot(0);
-        for (int i = 0; i < 10; i++) {
-            set_sprite_attributes_ext(sprites[i].spritePattern, sprites[i].x, sprites[i].y, 0, sprites[i].spriteFlags, 0, 1);
+        if (timer % 64 == 0) {
+            set_sprite_attributes(0, 0, 0, 0, 0, 1);
+        } else if (timer % 32 == 0) {
+            set_sprite_attributes(0, 16, 16, 0, 0, 1);
         }
-
         WAIT_FOR_SCANLINE(192);
-        timer++;  
+        timer++;        
     }
 
     return 0;
