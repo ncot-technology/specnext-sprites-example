@@ -313,34 +313,31 @@ end:
 
 int main(void)
 {
-    zx_border(INK_BLUE);
+    zx_border(INK_RED);
     uint8_t sprBuf[256];
-    load_sprite_patterns("all.spr", sprBuf, 37, 0);
+    load_sprite_patterns("jack.spr", sprBuf, 37, 0);
     set_sprite_pattern_slot(0);
-    load_sprite_palette("all.nxp", sprBuf);
+    load_sprite_palette("jack.nxp", sprBuf);
     set_sprite_layers_system(true, true, LAYER_PRIORITIES_S_L_U, false);
     set_sprite_attrib_slot(0);
 
+
+
     // Endless loop
-    uint8_t timer = 0;
-    uint8_t spriteID = 2;
     while(1) {
-        set_sprite_attrib_slot(0);
-        // Unified sprite
-        set_sprite_attributes_ext_anchor(spriteID, 32, 64, 0, 0, 1, 0);
-        set_sprite_attributes_ext_relative(1, 16, 0, 0, 0, 1, 1);
-        set_sprite_attributes_ext_relative(2, 32, 0, 0, 0, 1, 1);
-        set_sprite_attributes_ext_relative(4, 16, 16, 0, 0, 1, 1);
-        set_sprite_attributes_ext_relative(5, 32, 16, 0, 0, 1, 1);
+set_sprite_attrib_slot(0);
+set_sprite_attributes_ext(0, 112, 112, 0, 0, 0, 1);
+set_sprite_attributes_ext(1, 128, 112, 0, 0, 0, 1);
+set_sprite_attributes_ext(2, 112, 128, 0, 0, 0, 1);
+set_sprite_attributes_ext(3, 128, 128, 0, 0, 0, 1);
 
-        if (++timer % 32 == 0) {
-            if (spriteID == 2)
-                spriteID = 8;
-            else
-                spriteID = 2;
-        }
+set_sprite_attributes_ext_anchor(0, 112, 112, 0, ROTATE_MASK, 1, 1);
+set_sprite_attributes_ext_relative(1, 16, 0, 0, 0, 1, 1);
+set_sprite_attributes_ext_relative(2, 0, 16, 0, 0, 1, 1);
+set_sprite_attributes_ext_relative(3, 16, 16, 0, 0, 1, 1);
 
-        WAIT_FOR_SCANLINE(192);       
+
+        WAIT_FOR_SCANLINE(192);
     }
 
     return 0;

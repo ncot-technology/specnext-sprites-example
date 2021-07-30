@@ -313,38 +313,48 @@ end:
 
 int main(void)
 {
-    zx_border(INK_BLUE);
+    zx_border(INK_RED);
     uint8_t sprBuf[256];
-    load_sprite_patterns("all.spr", sprBuf, 37, 0);
+    load_sprite_patterns("clive.spr", sprBuf, 37, 0);
     set_sprite_pattern_slot(0);
-    load_sprite_palette("all.nxp", sprBuf);
+    load_sprite_palette("clive.nxp", sprBuf);
     set_sprite_layers_system(true, true, LAYER_PRIORITIES_S_L_U, false);
     set_sprite_attrib_slot(0);
 
+
+
     // Endless loop
+    int timer = 0;
+    int visFlag = 0;
     while(1) {
         set_sprite_attrib_slot(0);
-        set_sprite_attributes_ext(0, 0, 0, 0, 0, 0, 1);
-        set_sprite_attributes_ext(0, 0, 16, 0, 0, SCALE_2x_YMASK, 1);
-        set_sprite_attributes_ext(0, 0, 48, 0, 0, SCALE_4x_YMASK, 1);
-        set_sprite_attributes_ext(0, 0, 112, 0, 0, SCALE_8x_YMASK, 1);
+        if (timer % 32 == 0) {
+            set_sprite_attributes_ext(0, 0, 0, 0, 0, 0, visFlag);
+            set_sprite_attributes_ext(0, 0, 16, 0, 0, SCALE_2x_YMASK, visFlag > 1);
+            set_sprite_attributes_ext(0, 0, 48, 0, 0, SCALE_4x_YMASK, visFlag > 2);
+            set_sprite_attributes_ext(0, 0, 112, 0, 0, SCALE_8x_YMASK, visFlag > 3);
 
-        set_sprite_attributes_ext(0, 16, 0, 0, 0, SCALE_2x_XMASK, 1);
-        set_sprite_attributes_ext(0, 48, 0, 0, 0, SCALE_4x_XMASK, 1);
-        set_sprite_attributes_ext(0, 112, 0, 0, 0, SCALE_8x_XMASK, 1);
+            set_sprite_attributes_ext(0, 16, 0, 0, 0, SCALE_2x_XMASK, visFlag > 4);
+            set_sprite_attributes_ext(0, 48, 0, 0, 0, SCALE_4x_XMASK, visFlag > 5);
+            set_sprite_attributes_ext(0, 112, 0, 0, 0, SCALE_8x_XMASK, visFlag > 6);
 
-        set_sprite_attributes_ext(0, 16, 16, 0, 0, SCALE_2x_YMASK | SCALE_2x_XMASK, 1);
-        set_sprite_attributes_ext(0, 48, 16, 0, 0, SCALE_2x_YMASK | SCALE_4x_XMASK, 1);
-        set_sprite_attributes_ext(0, 112, 16, 0, 0, SCALE_2x_YMASK | SCALE_8x_XMASK, 1);
+            set_sprite_attributes_ext(0, 16, 16, 0, 0, SCALE_2x_YMASK | SCALE_2x_XMASK, visFlag > 7);
+            set_sprite_attributes_ext(0, 48, 16, 0, 0, SCALE_2x_YMASK | SCALE_4x_XMASK, visFlag > 8);
+            set_sprite_attributes_ext(0, 112, 16, 0, 0, SCALE_2x_YMASK | SCALE_8x_XMASK, visFlag > 9);
 
-        set_sprite_attributes_ext(0, 16, 48, 0, 0, SCALE_4x_YMASK | SCALE_2x_XMASK, 1);
-        set_sprite_attributes_ext(0, 48, 48, 0, 0, SCALE_4x_YMASK | SCALE_4x_XMASK, 1);
-        set_sprite_attributes_ext(0, 112, 48, 0, 0, SCALE_4x_YMASK | SCALE_8x_XMASK, 1);
+            set_sprite_attributes_ext(0, 16, 48, 0, 0, SCALE_4x_YMASK | SCALE_2x_XMASK, visFlag > 10);
+            set_sprite_attributes_ext(0, 48, 48, 0, 0, SCALE_4x_YMASK | SCALE_4x_XMASK, visFlag > 11);
+            set_sprite_attributes_ext(0, 112, 48, 0, 0, SCALE_4x_YMASK | SCALE_8x_XMASK, visFlag > 12);
 
-        set_sprite_attributes_ext(0, 16, 112, 0, 0, SCALE_8x_YMASK | SCALE_2x_XMASK, 1);
-        set_sprite_attributes_ext(0, 48, 112, 0, 0, SCALE_8x_YMASK | SCALE_4x_XMASK, 1);
-        set_sprite_attributes_ext(0, 112, 112, 0, 0, SCALE_8x_YMASK | SCALE_8x_XMASK, 1);
-        WAIT_FOR_SCANLINE(192);       
+            set_sprite_attributes_ext(0, 16, 112, 0, 0, SCALE_8x_YMASK | SCALE_2x_XMASK, visFlag > 13);
+            set_sprite_attributes_ext(0, 48, 112, 0, 0, SCALE_8x_YMASK | SCALE_4x_XMASK, visFlag > 14);
+            set_sprite_attributes_ext(0, 112, 112, 0, 0, SCALE_8x_YMASK | SCALE_8x_XMASK, visFlag > 15);
+
+            visFlag = ++visFlag % 17;
+        }
+        
+        WAIT_FOR_SCANLINE(192);
+        timer ++;    
     }
 
     return 0;

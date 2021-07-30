@@ -264,6 +264,19 @@ int main(void)
         timer++;        
     }
 
+    // Endless loop
+    int timer = 0;
+    while(1) {
+        set_sprite_attrib_slot(0);
+        if (timer % 2 == 0) {
+            set_sprite_attributes(0, 128, 32, 0, 0, 1);
+        } else {
+            set_sprite_attributes(1, 128, 32, 0, 0, 1);
+        }
+        WAIT_FOR_SCANLINE(192);
+        timer++;          
+    }
+
     return 0;
 }
 

@@ -239,30 +239,52 @@ end:
     esxdos_f_close(filehandle);
 }
 
-
-
 int main(void)
 {
-    zx_border(INK_BLUE);
+    zx_border(INK_GREEN);
     uint8_t sprBuf[256];
-    load_sprite_patterns("all.spr", sprBuf, 37, 0);
+    load_sprite_patterns("racing.spr", sprBuf, 37, 0);
     set_sprite_pattern_slot(0);
-    load_sprite_palette("all.nxp", sprBuf);
+    load_sprite_palette("racing.nxp", sprBuf);
     set_sprite_layers_system(true, true, LAYER_PRIORITIES_S_L_U, false);
     set_sprite_attrib_slot(0);
 
     // Endless loop
+
+    struct anim {
+        int pattern_id;
+        uint8_t flags;
+    } anim_frames[8] = {
+        {0,0},
+        {1,0},
+        {0,ROTATE_MASK},
+        {1,MIRROR_Y_MASK},
+        {0,MIRROR_Y_MASK},
+        {2,MIRROR_Y_MASK},
+        {0,ROTATE_MASK | MIRROR_X_MASK},
+        {2,0}
+    };
+
+    int timer = 0;
+    int frame = 0;
     while(1) {
         set_sprite_attrib_slot(0);
-        set_sprite_attributes(0, 0, 0, 0, 0, 1);
-        set_sprite_attributes(0, 16, 0, 0, MIRROR_X_MASK, 1);
-        set_sprite_attributes(0, 32, 0, 0, MIRROR_Y_MASK, 1);
-        set_sprite_attributes(0, 48, 0, 0, MIRROR_X_MASK | MIRROR_Y_MASK, 1);
-        set_sprite_attributes(0, 0, 16, 0, ROTATE_MASK, 1);
-        set_sprite_attributes(0, 16, 16, 0, ROTATE_MASK | MIRROR_X_MASK, 1);
-        set_sprite_attributes(0, 32, 16, 0, ROTATE_MASK | MIRROR_Y_MASK, 1);
-        set_sprite_attributes(0, 48, 16, 0, ROTATE_MASK | MIRROR_X_MASK | MIRROR_Y_MASK, 1);
-        WAIT_FOR_SCANLINE(192);       
+        set_sprite_attributes(0, 32, 32, 0, 0, 1);
+        set_sprite_attributes(1, 48, 32, 0, 0, 1);
+        set_sprite_attributes(0, 64, 32, 0, ROTATE_MASK, 1);
+        set_sprite_attributes(1, 80, 32, 0, MIRROR_Y_MASK, 1);
+        set_sprite_attributes(0, 96, 32, 0, MIRROR_Y_MASK, 1);
+        set_sprite_attributes(2, 112, 32, 0, MIRROR_Y_MASK, 1);
+        set_sprite_attributes(0, 128, 32, 0, ROTATE_MASK | MIRROR_X_MASK, 1);
+        set_sprite_attributes(2, 144, 32, 0, 0, 1);
+
+        if (timer % 32 == 0) {
+            set_sprite_attributes(anim_frames[frame].pattern_id+3, 144, 128, 0, anim_frames[frame].flags, 1);
+            frame = ++frame % 8;
+        }
+
+        WAIT_FOR_SCANLINE(192);  
+        timer++;
     }
 
     return 0;

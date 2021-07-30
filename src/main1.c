@@ -254,12 +254,12 @@ int main(void)
     while(1) {
         set_sprite_attrib_slot(0);
         if (timer % 64 == 0) {
-            set_sprite_attributes(0, 0, 0, 0, 0, 1);
+            set_sprite_attributes(0, 128, 32, 0, 0, 1);
         } else if (timer % 32 == 0) {
-            set_sprite_attributes(0, 16, 16, 0, 0, 1);
+            set_sprite_attributes(1, 128, 32, 0, 0, 1);
         }
         WAIT_FOR_SCANLINE(192);
-        timer++;        
+        timer++;          
     }
 
     return 0;
